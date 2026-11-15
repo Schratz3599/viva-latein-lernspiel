@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIVA Lektion 31 – Vokabel- und Grammatikmeister</title>
+<style>
+:root{color-scheme:light;--ink:#243044;--muted:#667085;--line:#dce2ea;--paper:#fff;--bg:#f3f5f8;--accent:#315d91;--good:#16794b;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:900px;margin:28px auto;padding:0 16px 40px}.head{background:#203c5d;color:white;padding:24px;border-radius:18px;margin-bottom:16px}
+h1{font-size:clamp(24px,5vw,34px);margin:0 0 5px}.head p{margin:0;color:#e3ebf5}
+.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+.tab{border:1px solid var(--line);background:white;border-radius:12px;padding:12px 10px;font-weight:650;color:var(--ink);cursor:pointer}
+.tab.active{background:var(--accent);color:white;border-color:var(--accent)}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 2px 8px #1420330a}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.muted{color:var(--muted);font-size:14px}
+h2{font-size:21px;margin:0 0 5px}.prompt{font-size:clamp(23px,5vw,34px);font-weight:750;text-align:center;padding:24px 8px;line-height:1.3}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{padding:14px;border:1px solid var(--line);background:white;border-radius:11px;text-align:left;font-size:16px;cursor:pointer;color:var(--ink);min-height:54px}
+.choice:hover:not(:disabled){border-color:var(--accent);background:#f4f8fc}.choice.good{border-color:var(--good);background:#e9f7ef}.choice.bad{border-color:var(--bad);background:#fff0ef}
+button:focus-visible{outline:3px solid #8db8ed;outline-offset:2px}
+.primary,.secondary{border:0;border-radius:11px;padding:12px 18px;font-weight:700;cursor:pointer;font-size:15px}
+.primary{background:var(--accent);color:white}.secondary{background:#edf1f6;color:var(--ink);border:1px solid var(--line)}
+.bar{height:9px;background:#e8edf3;border-radius:10px;overflow:hidden;margin:12px 0}.bar>div{height:100%;background:#4c83bd;width:0;transition:width .2s}
+.feedback{padding:12px;border-radius:10px;margin-top:12px;background:#f1f5f9}.feedback.good{background:#e9f7ef;color:#125b3b}.feedback.bad{background:#fff0ef;color:#8d2019}
+.hidden{display:none!important}.score{font-size:20px;font-weight:800}.footer{font-size:12px;color:var(--muted);text-align:center;margin-top:22px}
+@media(max-width:560px){.answers{grid-template-columns:1fr}.tab{font-size:13px;padding:10px 6px}.panel{padding:14px}}
+</style>
+</head>
+<body>
+<main>
+<header class="head"><h1>Vokabel- &amp; Grammatikmeister</h1><p>VIVA · Lektion 31 und Ablativus absolutus</p></header>
+<div class="tabs" role="tablist">
+<button class="tab active" data-mode="lat">⚔️ Vokabelduell<br><small>Latein → Deutsch</small></button>
+<button class="tab" data-mode="deu">📜 Übersetzungs-Challenge<br><small>Deutsch → Latein</small></button>
+<button class="tab" data-mode="mix">🏆 Wissensmeister<br><small>Gemischte Vokabeln</small></button>
+<button class="tab" data-mode="abl">✍️ Grammatikmeister<br><small>Ablativus absolutus</small></button>
+<button class="tab" data-mode="nom" style="grid-column:1/-1">🏛️ Nominaler Ablativus absolutus<br><small>Feste Wendungen übersetzen</small></button>
+</div>
+<section class="panel" id="intro">
+<h2 id="introTitle">⚔️ Vokabelduell</h2>
+<p id="introText">Übersetze lateinische Vokabeln ins Deutsche. Es gibt 25 Fragen pro Runde.</p>
+<div class="row"><span class="muted">25 Fragen · Multiple Choice · direkte Rückmeldung</span><button class="primary" id="start">Spiel starten</button></div>
+</section>
+<section class="panel hidden" id="game">
+<div class="row"><span id="modeName"><b>Vokabelduell</b></span><span class="score" id="score">0 Punkte</span></div>
+<div class="bar"><div id="progress"></div></div>
+<div class="row muted"><span id="count">Frage 1 von 25</span><span id="streak">Serie: 0 🔥</span></div>
+<div class="muted" id="instruction" style="text-align:center;margin-top:14px">Übersetze ins Deutsche</div>
+<div class="prompt" id="question"></div>
+<div class="answers" id="answers"></div>
+<div id="feedback" class="feedback hidden" aria-live="polite"></div>
+<div class="row" style="margin-top:14px"><button class="secondary" id="quit">Zurück</button><button class="primary hidden" id="next">Nächste Frage →</button></div>
+</section>
+<section class="panel hidden" id="result">
+<h2 id="resultTitle">Runde beendet!</h2><p id="resultText"></p>
+<div class="row"><div><div class="muted">Punkte</div><div class="score" id="finalScore">0</div></div><div><div class="muted">Richtig</div><div class="score" id="finalRight">0/25</div></div><div><div class="muted">Trefferquote</div><div class="score" id="finalPct">0%</div></div></div>
+<div id="review" style="margin-top:14px"></div>
+<button class="primary" id="restart">Noch einmal spielen</button>
+</section>
+<p class="footer">Offline spielbar · keine Anmeldung · keine Datenübertragung</p>
+</main>
+<script>
+const vocab=[
+["mirus, -a, -um","erstaunlich; wunderbar"],["homo, hominis m.","Mensch"],["vita, -ae f.","Leben"],["paene","fast"],["venatio, -onis f.","Jagd"],["studium, -i n.","Eifer; Beschäftigung"],["res militaris","Kriegswesen"],["parens, parentis m./f.","Elternteil"],["auctor, auctoris m.","Urheber; Veranlasser"],["parvulus, -a, -um","sehr klein"],["labor, laboris m.","Arbeit; Mühe"],["durus, -a, -um","hart"],["pugna, -ae f.","Kampf"],["acer, acris, acre","scharf; heftig"],["studere (+ Dat.)","sich bemühen um"],["quam ob rem","weshalb; warum"],["profecto","sicherlich; gewiss"],["ingens, ingentis","gewaltig; riesig"],["corpus, corporis n.","Körper"],["impetus, -us m.","Angriff; Ansturm"],["validus, -a, -um","stark; gesund"],["contendere","behaupten; sich anstrengen"],["negotium, -i n.","Geschäft; Angelegenheit"],["convivium, -i n.","Gastmahl; Fest"],["armatus, -a, -um","bewaffnet"],["adire","herangehen; aufsuchen"],
+["inferior, inferius","der untere"],["ponere, pono, posui, positum","stellen; legen"],["vivere, vivo, vixi","leben"],["mos, moris m.","Sitte; Brauch; Charakter"],["cernere, cerno, crevi, cretum","wahrnehmen; sehen; bemerken"],["ops, opis f.","Kraft; Hilfe; Macht; Streitkräfte; Reichtum"],["iuvare, iuvo, iuvi, iutum","unterstützen; helfen"],["castra, castrorum n.","Lager"],["castra movere","aufbrechen"],["castra ponere","ein Lager aufschlagen"],["dux, ducis m.","(Heer-)Führer"],["positus, -a, -um","gelegen"],["ipse, ipsa, ipsum","selbst; persönlich; eben; gerade"],["consistere, consisto, constiti","sich aufstellen; stehenbleiben; bestehen aus"],["religio, -onis f.","Ehrfurcht; Gottesverehrung"],["consuetudo, -inis f.","Gewohnheit"],["differre, differo, distuli, dilatum","auseinandertragen; aufschieben; unterscheiden"],["excipere, excipio, excepi, exceptum","aufnehmen; eine Ausnahme machen"],["sol, solis m.","Sonne"],["praesens, praesentis","anwesend; gegenwärtig"],["caedere, caedo, cecidi, caesum","fällen; niederhauen; töten"],["turpis, e","hässlich; schändlich; moralisch schlecht"],["animal, animalis n.","Lebewesen; Tier"]
+];
+// Übersetzungsfragen zum Ablativus absolutus mit Partizip: PPA gleichzeitig/aktiv, PPP vorzeitig/passiv.
+const abl=[
+["Hostibus appropinquantibus milites castra munierunt.","Während sich die Feinde näherten, befestigten die Soldaten das Lager.","gleichzeitig (PPA)"],
+["Pace data Germani in silvas redierunt.","Nachdem Frieden geschlossen worden war, kehrten die Germanen in die Wälder zurück.","vorzeitig (PPP)"],
+["Vicis incensis hostes ex oppido fugerunt.","Nachdem die Dörfer in Brand gesetzt worden waren, flohen die Feinde aus der Stadt.","vorzeitig (PPP)"],
+["Militibus pugnantibus Caesar in castris auxilium exspectabat.","Während die Soldaten kämpften, erwartete Caesar im Lager Hilfe.","gleichzeitig (PPA)"],
+["Germanis victis imperator pacem dedit.","Nachdem die Germanen besiegt worden waren, gewährte der Feldherr Frieden.","vorzeitig (PPP)"],
+["Romanis flumen transeuntibus Germani se in silvas abdiderunt.","Während die Römer den Fluss überquerten, verbargen sich die Germanen in den Wäldern.","gleichzeitig (PPA)"],
+["Castris positis milites cibum quaesiverunt.","Nachdem das Lager aufgeschlagen worden war, suchten die Soldaten Nahrung.","vorzeitig (PPP)"],
+["Hostibus fugientibus Romani vicos incenderunt.","Während die Feinde flohen, setzten die Römer die Dörfer in Brand.","gleichzeitig (PPA)"],
+["Impetu a Germanis facto Romani se receperunt.","Nachdem von den Germanen ein Angriff unternommen worden war, zogen sich die Römer zurück.","vorzeitig (PPP)"],
+["Romanis pontem aedificantibus Germani resistere non potuerunt.","Während die Römer eine Brücke bauten, konnten die Germanen keinen Widerstand leisten.","gleichzeitig (PPA)"],
+["Urbe capta milites praedam petiverunt.","Nachdem die Stadt erobert worden war, suchten die Soldaten Beute.","vorzeitig (PPP)"],
+["Caesare veniente milites gaudebant.","Als Caesar kam, freuten sich die Soldaten.","gleichzeitig (PPA)"],
+["Signo dato milites impetum fecerunt.","Nachdem das Signal gegeben worden war, griffen die Soldaten an.","vorzeitig (PPP)"],
+["Duce loquente omnes milites tacebant.","Während der Anführer sprach, schwiegen alle Soldaten.","gleichzeitig (PPA)"],
+["Ponte facto exercitus flumen transiit.","Nachdem eine Brücke gebaut worden war, überquerte das Heer den Fluss.","vorzeitig (PPP)"],
+["Hostibus appropinquantibus incolae fugerunt.","Während sich die Feinde näherten, flohen die Einwohner.","gleichzeitig (PPA)"],
+["Litteris acceptis Caesar respondit.","Nachdem der Brief empfangen worden war, antwortete Caesar.","vorzeitig (PPP)"],
+["Patre clamante puer domum rediit.","Während der Vater rief, kehrte der Junge nach Hause zurück.","gleichzeitig (PPA)"],
+["Militibus convocatis imperator consilium cepit.","Nachdem die Soldaten zusammengerufen worden waren, fasste der Feldherr einen Plan.","vorzeitig (PPP)"],
+["Hostibus resistentibus Romani oppidum oppugnabant.","Während die Feinde Widerstand leisteten, griffen die Römer die Stadt an.","gleichzeitig (PPA)"],
+["Caesare profecto milites castra reliquerunt.","Nachdem Caesar aufgebrochen war, verließen die Soldaten das Lager.","vorzeitig (PPP)"],
+["Sole oriente agricolae laborare coeperunt.","Als die Sonne aufging, begannen die Bauern zu arbeiten.","gleichzeitig (PPA)"],
+["Vallo aedificato Romani se defenderunt.","Nachdem ein Wall errichtet worden war, verteidigten sich die Römer.","vorzeitig (PPP)"],
+["Germanis appropinquantibus Romani arma paraverunt.","Während sich die Germanen näherten, bereiteten die Römer die Waffen vor.","gleichzeitig (PPA)"],
+["Pace facta milites domum redierunt.","Nachdem Frieden geschlossen worden war, kehrten die Soldaten nach Hause zurück.","vorzeitig (PPP)"]
+];
+// Nominale Ablativi absoluti: Übersetzungen als feste Wendungen, angelehnt an das Arbeitsblatt.
+const nominal=[
+["Caesare duce","unter Caesars Führung"],["Augusto imperatore","unter Kaiser Augustus; unter der Herrschaft des Augustus"],["Romulo rege","unter König Romulus"],["patre auctore","auf Veranlassung des Vaters"],["parentibus invitis","gegen den Willen der Eltern"],["duce praesente","in Anwesenheit des Anführers"],["te invito","gegen deinen Willen"],["me duce","unter meiner Führung"],["Cicerone consule","unter dem Konsulat Ciceros"],["parentibus auctoribus","auf Veranlassung der Eltern"],["Augusto auctore","auf Veranlassung des Augustus"],
+["Augusto imperatore","unter der Herrschaft des Augustus"],["matre invita","gegen den Willen der Mutter"],["patre praesente","in Anwesenheit des Vaters"],["rege auctore","auf Veranlassung des Königs"],["Caesare praesente","in Anwesenheit Caesars"],["duce invito","gegen den Willen des Anführers"],["consule Cicerone","unter dem Konsulat Ciceros"],["Caesare consule","während Caesar Konsul war; unter Caesars Konsulat"],["patre duce","unter der Führung des Vaters"],["matre auctore","auf Veranlassung der Mutter"],["militibus praesentibus","in Anwesenheit der Soldaten"],["hostibus invitis","gegen den Willen der Feinde"],["imperatore duce","unter der Führung des Feldherrn"],["Caesare auctore","auf Veranlassung Caesars"]
+];
+const modes={
+lat:["⚔️ Vokabelduell","Übersetze die lateinische Vokabel ins Deutsche."],
+deu:["📜 Übersetzungs-Challenge","Finde die passende lateinische Vokabel zur deutschen Bedeutung."],
+mix:["🏆 Wissensmeister","Gemischte Abfrage: Latein → Deutsch und Deutsch → Latein."],
+abl:["✍️ Grammatikmeister · Ablativus absolutus","Übersetze den vollständigen Satz. Achte auf PPA (gleichzeitig/aktiv) und PPP (vorzeitig/passiv)."],
+nom:["🏛️ Nominaler Ablativus absolutus","Übersetze die feste Wendung mit einem passenden deutschen präpositionalen Ausdruck."]
+};
+let mode='lat',questions=[],idx=0,points=0,correct=0,streak=0,wrong=[];
+const $=id=>document.getElementById(id);
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function setMode(m){mode=m;document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));$('introTitle').textContent=modes[m][0];$('introText').textContent=modes[m][1]+' Es gibt 25 Fragen pro Runde.';$('intro').classList.remove('hidden');$('game').classList.add('hidden');$('result').classList.add('hidden')}
+function start(){idx=0;points=0;correct=0;streak=0;wrong=[];
+ if(mode==='abl')questions=shuffle(abl).map((x)=>({q:x[0],a:x[1],extra:x[2],opts:[]})); 
+ else if(mode==='nom')questions=shuffle(nominal).map(x=>({q:x[0],a:x[1]}));
+ else {questions=shuffle(vocab).slice(0,25).map(x=>({q:x[0],a:x[1]}));}
+ $('intro').classList.add('hidden');$('result').classList.add('hidden');$('game').classList.remove('hidden');render()}
+function render(){let item=questions[idx];$('score').textContent=points+' Punkte';$('count').textContent=`Frage ${idx+1} von 25`;$('progress').style.width=(idx/25*100)+'%';$('streak').textContent='Serie: '+streak+' 🔥';$('modeName').textContent=modes[mode][0];
+ let reverse=mode==='deu'||(mode==='mix'&&Math.random()<.5);
+ $('instruction').textContent=mode==='abl'?'Übersetze den Satz ins Deutsche.':mode==='nom'?'Übersetze die feste Wendung ins Deutsche.':reverse?'Welche lateinische Vokabel passt?':'Was bedeutet diese lateinische Vokabel?';
+ $('question').textContent=(mode==='abl'||mode==='nom')?item.q:(reverse?item.a:item.q);
+ let opts;
+ if(mode==='abl'){opts=shuffle([item.a,...shuffle(abl.filter(x=>x!==item).map(x=>x[1])).slice(0,3)]);}
+ else if(mode==='nom'){opts=shuffle([item.a,...shuffle(nominal.filter(x=>x!==item).map(x=>x[1])).slice(0,3)]);}
+ else if(reverse){opts=shuffle([item.q,...shuffle(vocab.filter(x=>x!==item).map(x=>x[0])).slice(0,3)]);}
+ else{opts=shuffle([item.a,...shuffle(vocab.filter(x=>x!==item).map(x=>x[1])).slice(0,3)]);}
+ $('answers').innerHTML='';opts.forEach(opt=>{let b=document.createElement('button');b.className='choice';b.textContent=opt;b.onclick=()=>answer(b,opt,item,reverse);$('answers').appendChild(b)});
+ $('feedback').className='feedback hidden';$('next').classList.add('hidden')}
+function answer(btn,chosen,item,reverse){let ok=chosen===(mode==='deu'||(mode==='mix'&&reverse)?item.q:item.a);document.querySelectorAll('.choice').forEach(b=>{b.disabled=true;if(b.textContent===(mode==='deu'||(mode==='mix'&&reverse)?item.q:item.a))b.classList.add('good')});
+ if(ok){points+=10;correct++;streak++;$('feedback').className='feedback good';$('feedback').textContent='Richtig! +10 Punkte'+(item.extra?' · '+item.extra:'');}
+ else{streak=0;wrong.push(item);btn.classList.add('bad');$('feedback').className='feedback bad';$('feedback').textContent='Leider nicht richtig. Lösung: '+((mode==='deu'||(mode==='mix'&&reverse))?item.q:item.a)+(item.extra?' · '+item.extra:'');}
+ $('feedback').classList.remove('hidden');$('score').textContent=points+' Punkte';$('streak').textContent='Serie: '+streak+' 🔥';$('next').classList.remove('hidden');$('next').textContent=idx===24?'Ergebnis anzeigen':'Nächste Frage →'}
+function finish(){ $('game').classList.add('hidden');$('result').classList.remove('hidden');$('progress').style.width='100%';let pct=Math.round(correct/25*100);$('resultTitle').textContent=pct>=90?'Hervorragend!':pct>=70?'Sehr gut!':'Weiter üben!';$('resultText').textContent='Du hast die Runde abgeschlossen.';$('finalScore').textContent=points;$('finalRight').textContent=correct+'/25';$('finalPct').textContent=pct+'%';$('review').innerHTML=wrong.length?'<b>Diese Aufgaben solltest du wiederholen:</b><ul>'+wrong.map(x=>'<li style="margin:6px 0">'+x.q+' — <b>'+x.a+'</b></li>').join('')+'</ul>':'Alle Fragen richtig beantwortet – klasse!'}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+$('start').onclick=start;$('next').onclick=()=>{idx++;if(idx>=25)finish();else render()};$('quit').onclick=()=>setMode(mode);$('restart').onclick=start;
+setMode('lat');
+</script>
+</body></html>
